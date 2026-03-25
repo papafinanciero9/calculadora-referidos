@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Ingresos por Referidos 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0D1B2A; color: #E8F4F8; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #0D1B2A 0%, #1A3A5C 100%);
+    padding: 32px 24px 24px;
+    text-align: center;
+    border-bottom: 2px solid #00D9A0;
+  }
+  header h1 { font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+  header h1 span { color: #00D9A0; }
+  header p { color: #8BAFC4; font-size: 0.9rem; }
+
+  .total-bar {
+    background: linear-gradient(90deg, #00D9A0, #00A878);
+    color: #0D1B2A;
+    text-align: center;
+    padding: 18px 24px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,217,160,0.3);
+  }
+  .total-bar .label { font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0.8; }
+  .total-bar .amount { font-size: 2.2rem; font-weight: 900; line-height: 1.1; }
+  .total-bar .sub { font-size: 0.78rem; opacity: 0.75; margin-top: 2px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+  .card {
+    background: #1A2F45;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #243B55;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+
+  .card-header {
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .card-header .left { display: flex; align-items: center; gap: 10px; }
+  .card-header .emoji { font-size: 1.6rem; }
+  .card-header .name { font-size: 1rem; font-weight: 800; color: #fff; }
+  .card-header .account { font-size: 0.72rem; color: #8BAFC4; margin-top: 1px; }
+  .card-header .badge {
+    font-size: 0.68rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 20px;
+    background: rgba(0,217,160,0.15); color: #00D9A0;
+    white-space: nowrap;
+  }
+  .card-header .badge.warn { background: rgba(255,179,71,0.15); color: #FFB347; }
+
+  .card-body { padding: 0 16px 16px; }
+
+  .earn-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  }
+  .earn-box {
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .earn-box.friend { background: #122840; border: 1px solid #1E3F5A; }
+  .earn-box.you    { background: #1A2E10; border: 1px solid #2A4A1A; }
+  .earn-box .box-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .earn-box.friend .box-label { color: #60A8D0; }
+  .earn-box.you .box-label    { color: #80C060; }
+  .earn-box .box-amount { font-size: 1.05rem; font-weight: 800; }
+  .earn-box.friend .box-amount { color: #A8D8F8; }
+  .earn-box.you .box-amount    { color: #A8E080; }
+  .earn-box .box-note { font-size: 0.68rem; color: #6A8CA8; margin-top: 2px; line-height: 1.3; }
+
+  .slider-section label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.78rem; color: #8BAFC4; margin-bottom: 6px;
+  }
+  .slider-section label span.val {
+    font-weight: 800; font-size: 0.85rem; color: #00D9A0;
+  }
+  input[type=range] {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 6px; border-radius: 3px; background: #243B55; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: #00D9A0; cursor: pointer; border: 2px solid #0D1B2A;
+    box-shadow: 0 0 6px rgba(0,217,160,0.5);
+  }
+
+  .result-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #0F2035; border-radius: 10px; padding: 12px 14px; margin-top: 10px;
+    border: 1px solid #1E3F5A;
+  }
+  .result-row .r-label { font-size: 0.75rem; color: #8BAFC4; }
+  .result-row .r-total { font-size: 1.3rem; font-weight: 900; color: #00D9A0; }
+  .result-row .r-max { font-size: 0.7rem; color: #5A7A94; margin-top: 1px; }
+
+  .req { font-size: 0.72rem; color: #6A8CA8; margin-top: 8px; line-height: 1.5; }
+  .req strong { color: #8BAFC4; }
+
+  .info-pill {
+    display: inline-block; font-size: 0.68rem; padding: 2px 8px; border-radius: 20px;
+    margin: 2px 2px 0; background: #0F2035; border: 1px solid #243B55; color: #8BAFC4;
+  }
+
+  footer {
+    text-align: center; padding: 24px; color: #4A6A84; font-size: 0.75rem;
+    border-top: 1px solid #1A2F45; margin-top: 8px;
+  }
+
+  .section-title {
+    padding: 8px 24px 0;
+    max-width: 1400px; margin: 0 auto;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: #5A8CAA;
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.3rem; }
+    .total-bar .amount { font-size: 1.7rem; }
+    .grid { padding: 12px; gap: 12px; }
+    .earn-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💸 Calculadora de <span>Ingresos por Referidos</span></h1>
+  <p>Mueve los sliders y descubre cuánto puedes ganar como padrino · Importes en <strong>netos</strong> (−19% IRPF) · Marzo 2026</p>
+</header>
+
+<div class="total-bar">
+  <div class="label">💰 Total neto estimado que ganarías tú como padrino</div>
+  <div class="amount" id="grand-total">0,00 €</div>
+  <div class="sub">Suma de todos tus referidos en todos los bancos</div>
+</div>
+
+<div class="section-title" style="margin-top:20px;">🏦 BANCOS CON PLAN AMIGO</div>
+<div class="grid" id="grid-banks"></div>
+
+<div class="section-title" style="margin-top:4px;">📱 NEOBANCOS E INVERSIÓN</div>
+<div class="grid" id="grid-neo"></div>
+
+<footer>
+  Importes netos calculados descontando retención del 19% (IRPF) · Los importes pueden variar según campaña vigente · Verifica siempre las condiciones en la web oficial de cada entidad · Marzo 2026
+</footer>
+
+<script>
+const IRPF = 0.19;
+const net = b => +(b * (1 - IRPF)).toFixed(2);
+const fmt = n => n.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+
+const banks = [
+  {
+    id: 'bbva', emoji: '🏆', name: 'BBVA', account: 'Cuenta Online Sin Comisiones',
+    group: 'banks',
+    valid: '2026 ∞', warn: false,
+    friendNote: 'Hasta 450 € brutos (50€ tarjeta + 400€ nómina ≥800€)',
+    friendNet: net(450),
+    // padrino: sistema de niveles 50/60/70 €
+    paddrinoPerRef: [50, 60, 60, 70, 70, 70, 70, 70, 70, 70], // brutos por referido según nivel
+    maxRefs: 10,
+    req: ['Nuevo cliente abre Cuenta Online', 'Activa Bizum', '1 compra ≥50€ tarjeta Aqua (50€) Y/O nómina ≥800€ (400€)', '45 días para cumplir requisitos'],
+    note: 'Sistema de niveles: 1er amigo 50€, 2º-3º 60€/c, 4º-10º 70€/c brutos.',
+    customSlider: true,
+  },
+  {
+    id: 'santander', emoji: '🔴', name: 'Santander', account: 'Cuenta 0€ Santander',
+    group: 'banks',
+    valid: '⚠️ Hasta 09/04/2026', warn: true,
+    friendNote: '300€ (nóm. 600–2.499€) / 400€ (nóm. ≥2.500€) brutos',
+    friendNet: net(400),
+    perRefBruto: 80,
+    maxRefs: 10,
+    req: ['Abrir Cuenta 0€ con código', 'Domiciliar nómina ≥600€', 'Activar Bizum'],
+    note: '80€ brutos = 64,80€ netos por referido. Máximo 10 amigos.',
+  },
+  {
+    id: 'abanca', emoji: '💰', name: 'ABANCA', account: 'Cuenta Online Nómina Clara',
+    group: 'banks',
+    valid: '2026 vigente', warn: false,
+    friendNote: '500€ brutos (nóm. ≥1.200€) / 185€ (800–1.199€)',
+    friendNet: net(500),
+    perRefBruto: 50,
+    maxRefs: 10,
+    req: ['Abrir Cuenta Clara con código', 'Domiciliar nómina ≥800€', 'Permanencia 24 meses'],
+    note: '50€ brutos = 40,50€ netos por referido. Hasta 10 amigos.',
+  },
+  {
+    id: 'openbank', emoji: '📱', name: 'Openbank', account: 'Cuenta Nómina Open',
+    group: 'banks',
+    valid: '⚠️ Hasta 17/04/2026', warn: true,
+    friendNote: '50€ netos + 20€ adicionales activando Bizum',
+    friendNet: 70,
+    perRefBruto: 50, // ya neto según datos del usuario
+    perRefNet: 50, // neto directo
+    maxRefs: 10,
+    req: ['Abrir Cuenta Nómina Open con código', 'Domiciliar nómina ≥600€', '+20€ si activa Bizum', 'Permanencia 24 meses'],
+    note: '50€ netos por referido. Hasta 10 amigos (500€ máx).',
+    alreadyNet: true,
+  },
+  {
+    id: 'ing', emoji: '🟠', name: 'ING', account: 'Cuenta Nómina ING + Cuenta Naranja',
+    group: 'banks',
+    valid: '⚠️ Hasta 29/03/2026', warn: true,
+    friendNote: '202,50€ netos en cuenta + 1% TAE sin permanencia',
+    friendNet: 202.50,
+    perRefBruto: 50,
+    maxRefs: 10,
+    req: ['Abrir Cuenta Nómina ING + Cuenta Naranja', 'Indicar DNI del padrino', 'Domiciliar nómina ≥700€ durante 6 meses'],
+    note: '50€ brutos = 40,50€ netos por referido. Máximo 10 amigos.',
+  },
+  {
+    id: 'unicaja', emoji: '🟢', name: 'Unicaja', account: 'Requetecuenta Digital',
+    group: 'banks',
+    valid: '⚠️ Hasta 31/05/2026', warn: true,
+    friendNote: 'Hasta 364,50€ netos o cupón Samsung Galaxy',
+    friendNet: 364.50,
+    perRefBruto: 50,
+    maxRefs: 20,
+    req: ['Abrir cuenta con código en oficina o banca digital', 'Domiciliar nómina ≥600€ o cuota autónomo', 'Nuevo cliente (sin domiciliación en Unicaja últimos 12 meses)'],
+    note: '50€ brutos = 40,50€ netos por referido. Hasta 20 amigos (1.000€ máx brutos).',
+  },
+  {
+    id: 'imagin', emoji: '🏙️', name: 'imagin', account: 'Cuenta imagin (CaixaBank)',
+    group: 'banks',
+    valid: '2026 vigente', warn: false,
+    friendNote: 'Cupón 50€ + hasta 250€ netos por nómina ≥1.500€',
+    friendNet: net(250) + 50,
+    perRefBruto: 50,
+    maxRefs: 10,
+    req: ['Abrir cuenta imagin con código', 'Mantener mínimo 5€ en cuenta', 'Activar Bizum'],
+    note: '50€ brutos = 40,50€ netos por referido. Hasta 10 amigos (500€ máx brutos).',
+  },
+];
+
+const neobanks = [
+  {
+    id: 'n26', emoji: '🇩🇪', name: 'N26', account: 'Cuenta N26 (banco digital europeo)',
+    group: 'neo',
+    valid: 'Sin caducidad ∞', warn: false,
+    friendNote: '15€ al realizar 1 compra ≥20€ con tarjeta N26',
+    friendNet: 15, // ya neto (N26 no hace retención en España)
+    perRefNet: 20,
+    perRefBruto: null,
+    maxRefs: null, // ilimitado
+    req: ['Abrir cuenta con código o enlace', 'Realizar 1 compra ≥20€ con tarjeta N26 (física o virtual)', 'Bono en ~60 días'],
+    note: '20€ por referido (N26 paga directamente, sin retención española). Referidos ilimitados — hasta 1.500€.',
+    alreadyNet: true,
+    unlimitedRefs: true,
+  },
+  {
+    id: 'myinvestor', emoji: '📊', name: 'MyInvestor', account: 'Neobanco inversor',
+    group: 'neo',
+    valid: '2026 vigente', warn: false,
+    friendNote: '25€ brutos al tener 1.000€ en cuenta O invertir 100€',
+    friendNet: net(25),
+    perRefBruto: 25,
+    maxRefs: 60,
+    req: ['Abrir cuenta con código', 'Tener 1.000€ en cuenta O invertir 100€ en fondos/acciones/planes', 'Cumplir en máx. 3 meses desde apertura'],
+    note: '25€ brutos = 20,25€ netos por referido. Hasta 60 amigos (1.500€ máx brutos).',
+  },
+  {
+    id: 'traderepublic', emoji: '📈', name: 'Trade Republic', account: 'Broker + cuenta remunerada',
+    group: 'neo',
+    valid: '2026 vigente', warn: false,
+    friendNote: 'Acción o ETF valorado entre 5€ y 200€ (aleatorio)',
+    friendNet: null,
+    perRefBruto: null,
+    perRefNet: null,
+    maxRefs: 40,
+    req: ['Abrir cuenta con código', 'Depositar dinero e invertir', 'Las acciones se bloquean 12 meses'],
+    note: 'El padrino también recibe una acción/ETF de valor aleatorio (5€–200€). Hasta 40 amigos.',
+    isStock: true,
+  },
+  {
+    id: 'revolut', emoji: '🌐', name: 'Revolut', account: 'Cuenta multidivisa',
+    group: 'neo',
+    valid: '2026 variable', warn: true,
+    friendNote: 'Variable: entre 10€ y 200€ según campaña del mes',
+    friendNet: null,
+    perRefBruto: null,
+    perRefNetMin: 10,
+    perRefNetMax: 200,
+    maxRefs: null,
+    req: ['Abrir cuenta con enlace', 'Solicitar tarjeta física', 'Realizar compras con la tarjeta'],
+    note: 'El bono del padrino varía cada mes (entre 10€ y 200€). Usa el valor medio (50€) como referencia.',
+    isVariable: true,
+  },
+];
+
+function getPerRefNet(b) {
+  if (b.alreadyNet) return b.perRefNet;
+  if (b.perRefBruto) return net(b.perRefBruto);
+  return null;
+}
+
+function bbvaTotal(refs) {
+  // sistema niveles: 1er=50, 2º-3º=60, 4º-10º=70 brutos
+  let total = 0;
+  for (let i = 0; i < refs; i++) {
+    const bruto = i === 0 ? 50 : i <= 2 ? 60 : 70;
+    total += net(bruto);
+  }
+  return total;
+}
+
+function buildCard(b) {
+  const isBBVA = b.id === 'bbva';
+  const isVariable = b.isVariable;
+  const isStock = b.isStock;
+  const maxR = b.maxRefs || (b.unlimitedRefs ? 50 : 20);
+  const perNet = getPerRefNet(b);
+
+  const div = document.createElement('div');
+  div.className = 'card';
+
+  let sliderHtml = '';
+  if (!isStock) {
+    const maxSlider = b.unlimitedRefs ? 50 : (b.maxRefs || 20);
+    const sliderMax = maxSlider;
+    if (isVariable) {
+      sliderHtml = `
+        <div class="slider-section">
+          <label>Amigos referidos: <span class="val" id="val-${b.id}">5</span></label>
+          <input type="range" min="1" max="20" value="5" id="sl-${b.id}" oninput="updateCard('${b.id}')">
+        </div>
+        <div class="slider-section" style="margin-top:10px;">
+          <label>Bono medio estimado (neto): <span class="val" id="valmid-${b.id}">50 €</span></label>
+          <input type="range" min="10" max="200" value="50" step="5" id="sl-mid-${b.id}" oninput="updateCard('${b.id}')">
+        </div>`;
+    } else {
+      sliderHtml = `
+        <div class="slider-section">
+          <label>Amigos referidos: <span class="val" id="val-${b.id}">1</span> / ${b.unlimitedRefs ? '∞ (muestra hasta 50)' : b.maxRefs}</label>
+          <input type="range" min="0" max="${sliderMax}" value="1" id="sl-${b.id}" oninput="updateCard('${b.id}')">
+        </div>`;
+    }
+  }
+
+  const reqItems = b.req.map(r => `<span class="info-pill">✓ ${r}</span>`).join('');
+
+  div.innerHTML = `
+    <div class="card-header" style="background: linear-gradient(135deg, ${headerColor(b.id)} 0%, #1A2F45 100%);">
+      <div class="left">
+        <span class="emoji">${b.emoji}</span>
+        <div>
+          <div class="name">${b.name}</div>
+          <div class="account">${b.account}</div>
+        </div>
+      </div>
+      <div class="badge ${b.warn ? 'warn' : ''}">${b.valid}</div>
+    </div>
+    <div class="card-body">
+      <div class="earn-row">
+        <div class="earn-box friend">
+          <div class="box-label">🧑 Tu amigo gana</div>
+          <div class="box-amount">${b.friendNet !== null ? fmt(b.friendNet) : '5–200 €'}</div>
+          <div class="box-note">${b.friendNote}</div>
+        </div>
+        <div class="earn-box you">
+          <div class="box-label">🤝 Tú ganas / ref.</div>
+          <div class="box-amount" id="perref-${b.id}">${isStock ? '5–200 € en acciones' : isVariable ? '~50 € (variable)' : perNet !== null ? fmt(perNet) : '?'}</div>
+          <div class="box-note">${b.note}</div>
+        </div>
+      </div>
+      ${sliderHtml}
+      ${!isStock ? `
+      <div class="result-row">
+        <div>
+          <div class="r-label">💰 Tu ganancia neta total</div>
+          <div class="r-max" id="max-${b.id}"></div>
+        </div>
+        <div class="r-total" id="total-${b.id}">0,00 €</div>
+      </div>` : `
+      <div class="result-row">
+        <div><div class="r-label">🎲 Valor aleatorio por referido (acciones/ETF)</div></div>
+        <div class="r-total">5–200 € / ref.</div>
+      </div>`}
+      <div class="req" style="margin-top:10px;">${reqItems}</div>
+    </div>`;
+
+  return div;
+}
+
+function headerColor(id) {
+  const colors = {
+    bbva: '#003A7A', santander: '#8B0000', abanca: '#7A0010',
+    openbank: '#8B3000', ing: '#8B3800', unicaja: '#005A1F',
+    imagin: '#003D7A', n26: '#0A0A1A', myinvestor: '#001A5A',
+    traderepublic: '#0A1A0A', revolut: '#1A0050',
+  };
+  return colors[id] || '#1A2F45';
+}
+
+function updateCard(id) {
+  const all = [...banks, ...neobanks];
+  const b = all.find(x => x.id === id);
+  if (!b || b.isStock) return;
+
+  const sl = document.getElementById(`sl-${id}`);
+  const refs = parseInt(sl.value);
+  document.getElementById(`val-${id}`).textContent = refs;
+
+  let total = 0;
+  if (b.id === 'bbva') {
+    total = bbvaTotal(refs);
+  } else if (b.isVariable) {
+    const mid = parseInt(document.getElementById(`sl-mid-${id}`).value);
+    document.getElementById(`valmid-${id}`).textContent = mid + ' €';
+    total = refs * mid;
+  } else {
+    const perNet = getPerRefNet(b);
+    total = refs * perNet;
+  }
+
+  document.getElementById(`total-${id}`).textContent = fmt(total);
+
+  // max label
+  const maxEl = document.getElementById(`max-${id}`);
+  if (maxEl) {
+    let maxTotal = 0;
+    if (b.id === 'bbva') maxTotal = bbvaTotal(b.maxRefs);
+    else if (b.isVariable) maxTotal = 20 * 200;
+    else if (b.maxRefs) maxTotal = b.maxRefs * getPerRefNet(b);
+    else if (b.unlimitedRefs) maxTotal = 50 * getPerRefNet(b);
+    if (maxTotal) maxEl.textContent = `Máx. posible: ${fmt(maxTotal)}`;
+  }
+
+  updateGrandTotal();
+}
+
+function updateGrandTotal() {
+  let grand = 0;
+  [...banks, ...neobanks].forEach(b => {
+    if (b.isStock) return;
+    const el = document.getElementById(`total-${b.id}`);
+    if (el) {
+      const val = parseFloat(el.textContent.replace(/\./g, '').replace(',', '.').replace(' €', '')) || 0;
+      grand += val;
+    }
+  });
+  document.getElementById('grand-total').textContent = fmt(grand);
+}
+
+// Render
+const gridBanks = document.getElementById('grid-banks');
+const gridNeo = document.getElementById('grid-neo');
+
+banks.forEach(b => gridBanks.appendChild(buildCard(b)));
+neobanks.forEach(b => gridNeo.appendChild(buildCard(b)));
+
+// Init all sliders
+[...banks, ...neobanks].forEach(b => {
+  if (!b.isStock) updateCard(b.id);
+});
+</script>
+</body>
+</html>
